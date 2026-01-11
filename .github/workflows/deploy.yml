@@ -28,8 +28,12 @@ jobs:
       - name: Verify Koyeb CLI installation
         run: koyeb version
 
-      - name: Login to Koyeb
-        run: koyeb login --token $KOYEB_API_TOKEN
+      - name: Create Koyeb config
+        run: |
+          mkdir -p $HOME
+          cat > $HOME/.koyeb.yaml << EOF
+          token: $KOYEB_API_TOKEN
+          EOF
 
       - name: Deploy backend to Koyeb
         id: deploy-backend
