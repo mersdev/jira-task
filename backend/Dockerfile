@@ -42,16 +42,12 @@ FROM docker.io/library/ruby:${RUBY_VERSION}-alpine AS production
 
 WORKDIR /app
 
-ENV RAILS_ENV=production \
-    LD_PRELOAD=/usr/local/lib/libjemalloc.so
+ENV RAILS_ENV=production
 
 RUN apk add --no-cache \
     curl \
-    libjemalloc2 \
     libpq \
-    libvips \
     tzdata && \
-    ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/cache/apk/*
 
 RUN addgroup -S rails && adduser -S rails -G rails
