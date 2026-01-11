@@ -27,14 +27,16 @@ jobs:
       - name: Verify Koyeb CLI installation
         run: koyeb version
 
+      - name: Login to Koyeb
+        run: koyeb login --token $KOYEB_API_TOKEN
+
       - name: Deploy backend to Koyeb
         id: deploy-backend
         run: |
           koyeb app init "backend" \
             --git "github.com/${{ github.repository }}" \
-            --git-branch "${{ github.ref_name }}" \
-            --git-path "backend" \
-            --git-buildpack-run-command "bundle exec rails server -b 0.0.0.0 -p 3000" \
+            --branch "${{ github.ref_name }}" \
+            --run-command "bundle exec rails server -b 0.0.0.0 -p 3000" \
             --ports "3000:http" \
             --env "RAILS_ENV=production,RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }},DATABASE_URL=${{ secrets.DATABASE_URL }}" \
             --org "${{ secrets.KOYEB_ORG }}" \
@@ -56,9 +58,8 @@ jobs:
         run: |
           koyeb app init "frontend" \
             --git "github.com/${{ github.repository }}" \
-            --git-branch "${{ github.ref_name }}" \
-            --git-path "frontend" \
-            --git-builder "docker" \
+            --branch "${{ github.ref_name }}" \
+            --builder "docker" \
             --ports "80:http" \
             --env "BACKEND_URL=${{ steps.backend-url.outputs.BACKEND_URL }}" \
             --org "${{ secrets.KOYEB_ORG }}" \
