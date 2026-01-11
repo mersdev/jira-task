@@ -29,6 +29,7 @@ jobs:
           git_branch: main
           git_workdir: frontend
           git_builder: docker
+          git_docker_dockerfile: Dockerfile
           service_ports: "80:http"
           service_routes: "/*:80"
           service_instance_type: nano
@@ -69,6 +70,7 @@ jobs:
           git_branch: main
           git_workdir: backend
           git_builder: docker
+          git_docker_dockerfile: Dockerfile
           service_ports: "3000:http"
           service_routes: "/api/*:3000"
           service_env: "RAILS_ENV=production,DATABASE_URL=@DATABASE_URL,RAILS_MASTER_KEY=@RAILS_MASTER_KEY"
