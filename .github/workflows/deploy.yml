@@ -2,81 +2,70 @@ name: Deploy to Koyeb
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+
+env:
+  KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
 
 jobs:
-  deploy-frontend:
+  deploy:
     runs-on: ubuntu-latest
-    concurrency:
-      group: frontend-${{ github.ref }}
-      cancel-in-progress: true
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install and configure Koyeb CLI
-        uses: koyeb-community/koyeb-actions@v2
-        with:
-          api_token: ${{ secrets.KOYEB_API_TOKEN }}
-
-      - name: Deploy frontend to Koyeb
-        uses: koyeb/action-git-deploy@v1
-        with:
-          app-name: monotask-frontend
-          service-name: frontend
-          git-branch: main
-          git-workdir: frontend
-          git-builder: docker
-          git-docker-dockerfile: Dockerfile
-          service-ports: "80:http"
-          service-routes: "/*:80"
-          service-instance-type: nano
-          service-regions: fra
-
-  deploy-backend:
-    runs-on: ubuntu-latest
-    concurrency:
-      group: backend-${{ github.ref }}
-      cancel-in-progress: true
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install and configure Koyeb CLI
-        uses: koyeb-community/koyeb-actions@v2
-        with:
-          api_token: ${{ secrets.KOYEB_API_TOKEN }}
-
-      - name: Create DATABASE_URL secret
+      - name: Install Koyeb CLI
         run: |
-          if ! koyeb secrets get DATABASE_URL &>/dev/null; then
-            koyeb secrets create DATABASE_URL --value "${{ secrets.DATABASE_URL }}"
-          else
-            echo "DATABASE_URL secret already exists, skipping creation"
-          fi
+          mkdir -p $HOME/.koyeb/bin
+          curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | sh
+          echo "$HOME/.koyeb/bin" >> $GITHUB_PATH
 
-      - name: Create RAILS_MASTER_KEY secret
-        run: |
-          if ! koyeb secrets get RAILS_MASTER_KEY &>/dev/null; then
-            koyeb secrets create RAILS_MASTER_KEY --value "${{ secrets.RAILS_MASTER_KEY }}"
-          else
-            echo "RAILS_MASTER_KEY secret already exists, skipping creation"
-          fi
+      - name: Verify Koyeb CLI installation
+        run: koyeb version
 
       - name: Deploy backend to Koyeb
-        uses: koyeb/action-git-deploy@v1
-        with:
-          app-name: monotask-backend
-          service-name: backend
-          git-branch: main
-          git-workdir: backend
-          git-builder: docker
-          git-docker-dockerfile: Dockerfile
-          service-ports: "3000:http"
-          service-routes: "/api/*:3000"
-          service-env: "RAILS_ENV=production,DATABASE_URL=@DATABASE_URL,RAILS_MASTER_KEY=@RAILS_MASTER_KEY"
-          service-instance-type: nano
-          service-regions: fra
+        id: deploy-backend
+        run: |
+          koyeb app init "backend" \
+            --git "github.com/${{ github.repository }}" \
+            --git-branch "${{ github.ref_name }}" \
+            --git-path "backend" \
+            --git-buildpack-run-command "bundle exec rails server -b 0.0.0.0 -p 3000" \
+            --ports "3000:http" \
+            --env "RAILS_ENV=production,RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }},DATABASE_URL=${{ secrets.DATABASE_URL }}" \
+            --org "${{ secrets.KOYEB_ORG }}" \
+            --region "${{ secrets.KOYEB_REGION }}" || true
+
+          koyeb service get backend -o yaml > backend-service.yaml
+          cat backend-service.yaml
+
+      - name: Get backend URL
+        id: backend-url
+        run: |
+          sleep 5
+          BACKEND_URL=$(koyeb service get backend -o json | jq -r '.routes[0].url')
+          echo "BACKEND_URL=$BACKEND_URL" >> $GITHUB_OUTPUT
+          echo "Backend URL: $BACKEND_URL"
+
+      - name: Deploy frontend to Koyeb
+        id: deploy-frontend
+        run: |
+          koyeb app init "frontend" \
+            --git "github.com/${{ github.repository }}" \
+            --git-branch "${{ github.ref_name }}" \
+            --git-path "frontend" \
+            --git-builder "docker" \
+            --ports "80:http" \
+            --env "BACKEND_URL=${{ steps.backend-url.outputs.BACKEND_URL }}" \
+            --org "${{ secrets.KOYEB_ORG }}" \
+            --region "${{ secrets.KOYEB_REGION }}" || true
+
+      - name: Display deployment URLs
+        run: |
+          echo "=== Deployment Complete ==="
+          echo "Backend: $(koyeb service get backend -o json | jq -r '.routes[0].url')"
+          echo "Frontend: $(koyeb service get frontend -o json | jq -r '.routes[0].url')"
