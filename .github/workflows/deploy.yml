@@ -51,16 +51,20 @@ jobs:
           api_token: ${{ secrets.KOYEB_API_TOKEN }}
 
       - name: Create DATABASE_URL secret
-        uses: koyeb/action-git-deploy/secret@v1
-        with:
-          secret_name: DATABASE_URL
-          secret_value: ${{ secrets.DATABASE_URL }}
+        run: |
+          if ! koyeb secrets get DATABASE_URL &>/dev/null; then
+            koyeb secrets create DATABASE_URL --value "${{ secrets.DATABASE_URL }}"
+          else
+            echo "DATABASE_URL secret already exists, skipping creation"
+          fi
 
       - name: Create RAILS_MASTER_KEY secret
-        uses: koyeb/action-git-deploy/secret@v1
-        with:
-          secret_name: RAILS_MASTER_KEY
-          secret_value: ${{ secrets.RAILS_MASTER_KEY }}
+        run: |
+          if ! koyeb secrets get RAILS_MASTER_KEY &>/dev/null; then
+            koyeb secrets create RAILS_MASTER_KEY --value "${{ secrets.RAILS_MASTER_KEY }}"
+          else
+            echo "RAILS_MASTER_KEY secret already exists, skipping creation"
+          fi
 
       - name: Deploy backend to Koyeb
         uses: koyeb/action-git-deploy@v1
