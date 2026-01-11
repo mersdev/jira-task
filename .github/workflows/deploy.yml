@@ -24,16 +24,16 @@ jobs:
       - name: Deploy frontend to Koyeb
         uses: koyeb/action-git-deploy@v1
         with:
-          app_name: monotask-frontend
-          service_name: frontend
-          git_branch: main
-          git_workdir: frontend
-          git_builder: docker
-          git_docker_dockerfile: Dockerfile
-          service_ports: "80:http"
-          service_routes: "/*:80"
-          service_instance_type: nano
-          service_regions: fra
+          app-name: monotask-frontend
+          service-name: frontend
+          git-branch: main
+          git-workdir: frontend
+          git-builder: docker
+          git-docker-dockerfile: Dockerfile
+          service-ports: "80:http"
+          service-routes: "/*:80"
+          service-instance-type: nano
+          service-regions: fra
 
   deploy-backend:
     runs-on: ubuntu-latest
@@ -69,14 +69,14 @@ jobs:
       - name: Deploy backend to Koyeb
         uses: koyeb/action-git-deploy@v1
         with:
-          app_name: monotask-backend
-          service_name: backend
-          git_branch: main
-          git_workdir: backend
-          git_builder: docker
-          git_docker_dockerfile: Dockerfile
-          service_ports: "3000:http"
-          service_routes: "/api/*:3000"
-          service_env: "RAILS_ENV=production,DATABASE_URL=@DATABASE_URL,RAILS_MASTER_KEY=@RAILS_MASTER_KEY"
-          service_instance_type: nano
-          service_regions: fra
+          app-name: monotask-backend
+          service-name: backend
+          git-branch: main
+          git-workdir: backend
+          git-builder: docker
+          git-docker-dockerfile: Dockerfile
+          service-ports: "3000:http"
+          service-routes: "/api/*:3000"
+          service-env: "RAILS_ENV=production,DATABASE_URL=@DATABASE_URL,RAILS_MASTER_KEY=@RAILS_MASTER_KEY"
+          service-instance-type: nano
+          service-regions: fra
