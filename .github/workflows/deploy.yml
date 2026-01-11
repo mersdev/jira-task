@@ -70,11 +70,26 @@ jobs:
 
       - name: Install Koyeb CLI
         run: |
-          curl -sL https://github.com/koyeb/koyeb-cli/releases/latest/download/koyeb-cli-linux-amd64.tar.gz -o koyeb.tar.gz
-          tar -xzf koyeb.tar.gz
-          chmod +x koyeb
-          sudo mv koyeb /usr/local/bin/
-          rm -f koyeb.tar.gz
+          KOYEB_VERSION=$(curl -sL \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/koyeb/koyeb-cli/releases/latest | \
+            grep '"tag_name"' | cut -d'"' -f4)
+          
+          echo "Installing Koyeb CLI version: ${KOYEB_VERSION}"
+          
+          curl -L -o /tmp/koyeb.tar.gz \
+            -H "Accept: application/octet-stream" \
+            "https://github.com/koyeb/koyeb-cli/releases/download/${KOYEB_VERSION}/koyeb-cli-linux-amd64.tar.gz"
+          
+          ls -la /tmp/koyeb.tar.gz
+          file /tmp/koyeb.tar.gz
+          
+          tar -xzf /tmp/koyeb.tar.gz -C /tmp
+          chmod +x /tmp/koyeb
+          sudo mv /tmp/koyeb /usr/local/bin/
+          rm -f /tmp/koyeb.tar.gz
+          
           koyeb version
 
       - name: Deploy to Koyeb
