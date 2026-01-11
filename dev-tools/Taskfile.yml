@@ -1,0 +1,39 @@
+version: '3'
+
+tasks:
+  postgres-run:
+    desc: Run PostgreSQL container
+    cmds:
+      - podman run -d --name postgres-dev -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=devdb -p 5432:5432 -v postgres-dev-data:/var/lib/postgresql/data docker.io/library/postgres:16-alpine
+
+  postgres-start:
+    desc: Start existing PostgreSQL container
+    cmds:
+      - podman start postgres-dev
+
+  postgres-stop:
+    desc: Stop PostgreSQL container
+    cmds:
+      - podman stop postgres-dev
+
+  postgres-remove:
+    desc: Remove PostgreSQL container and volume
+    cmds:
+      - podman stop postgres-dev 2>/dev/null || true
+      - podman rm postgres-dev
+      - podman volume rm postgres-dev-data 2>/dev/null || true
+
+  postgres-status:
+    desc: Show PostgreSQL container status
+    cmds:
+      - podman ps -a --filter name=postgres-dev
+
+  postgres-logs:
+    desc: Show PostgreSQL container logs
+    cmds:
+      - podman logs postgres-dev
+
+  postgres-restart:
+    desc: Restart PostgreSQL container
+    cmds:
+      - podman restart postgres-dev
