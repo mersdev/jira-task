@@ -5,108 +5,72 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  REGISTRY: docker.io
-  FRONTEND_IMAGE: merszerodev1023/monotask-frontend
-  BACKEND_IMAGE: merszerodev1023/monotask-backend
-
 jobs:
-  build-and-deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    concurrency:
+      group: frontend-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+      - name: Install and configure Koyeb CLI
+        uses: koyeb-community/koyeb-actions@v2
         with:
-          registry: docker.io
-          username: merszerodev1023
-          password: ${{ secrets.DOCKER_PAT }}
+          api_token: ${{ secrets.KOYEB_API_TOKEN }}
 
-      - name: Extract metadata for Frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
+      - name: Deploy frontend to Koyeb
+        uses: koyeb/action-git-deploy@v1
         with:
-          images: ${{ env.FRONTEND_IMAGE }}
-          tags: |
-            type=sha
-            type=ref,event=branch
+          app_name: monotask-frontend
+          service_name: frontend
+          git_branch: main
+          git_workdir: frontend
+          git_builder: docker
+          service_ports: "80:http"
+          service_routes: "/*:80"
+          service_instance_type: nano
+          service_regions: fra
 
-      - name: Extract metadata for Backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
+  deploy-backend:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: backend-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install and configure Koyeb CLI
+        uses: koyeb-community/koyeb-actions@v2
         with:
-          images: ${{ env.BACKEND_IMAGE }}
-          tags: |
-            type=sha
-            type=ref,event=branch
+          api_token: ${{ secrets.KOYEB_API_TOKEN }}
 
-      - name: Build and push Frontend
-        uses: docker/build-push-action@v5
+      - name: Create DATABASE_URL secret
+        uses: koyeb/action-git-deploy/secret@v1
         with:
-          context: ./frontend
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.annotations }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          secret_name: DATABASE_URL
+          secret_value: ${{ secrets.DATABASE_URL }}
 
-      - name: Build and push Backend
-        uses: docker/build-push-action@v5
+      - name: Create RAILS_MASTER_KEY secret
+        uses: koyeb/action-git-deploy/secret@v1
         with:
-          context: ./backend
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.annotations }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          secret_name: RAILS_MASTER_KEY
+          secret_value: ${{ secrets.RAILS_MASTER_KEY }}
 
-      - name: Install Koyeb CLI
-        run: |
-          KOYEB_VERSION=$(curl -sL \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/repos/koyeb/koyeb-cli/releases/latest | \
-            grep '"tag_name"' | cut -d'"' -f4)
-          
-          echo "Installing Koyeb CLI version: ${KOYEB_VERSION}"
-          
-          curl -L -o /tmp/koyeb.tar.gz \
-            -H "Accept: application/octet-stream" \
-            "https://github.com/koyeb/koyeb-cli/releases/download/${KOYEB_VERSION}/koyeb-cli-linux-amd64.tar.gz"
-          
-          ls -la /tmp/koyeb.tar.gz
-          file /tmp/koyeb.tar.gz
-          
-          tar -xzf /tmp/koyeb.tar.gz -C /tmp
-          chmod +x /tmp/koyeb
-          sudo mv /tmp/koyeb /usr/local/bin/
-          rm -f /tmp/koyeb.tar.gz
-          
-          koyeb version
-
-      - name: Deploy to Koyeb
-        env:
-          KOYEB_API_TOKEN: ${{ secrets.KOYEB_API_TOKEN }}
-        run: |
-          koyeb login --token "$KOYEB_API_TOKEN"
-
-          koyeb app init frontend \
-            --image "docker.io/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}" \
-            --ports "80:http" \
-            --routes "/*:80"
-
-          koyeb app init backend \
-            --image "docker.io/${{ env.BACKEND_IMAGE }}:${{ github.sha }}" \
-            --ports "3000:http" \
-            --routes "/api/*:3000" \
-            --env "DATABASE_URL=${{ secrets.DATABASE_URL }}" \
-            --env "RAILS_ENV=production" \
-            --env "RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}"
+      - name: Deploy backend to Koyeb
+        uses: koyeb/action-git-deploy@v1
+        with:
+          app_name: monotask-backend
+          service_name: backend
+          git_branch: main
+          git_workdir: backend
+          git_builder: docker
+          service_ports: "3000:http"
+          service_routes: "/api/*:3000"
+          service_env: "RAILS_ENV=production,DATABASE_URL=@DATABASE_URL,RAILS_MASTER_KEY=@RAILS_MASTER_KEY"
+          service_instance_type: nano
+          service_regions: fra
