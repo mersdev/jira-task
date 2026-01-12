@@ -26,7 +26,10 @@ jobs:
       id-token: write
       checks: read
     steps:
-      - name: Checkout & Auth
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
         uses: ./.github/actions/deploy-cloud-run/001-checkout-auth
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -58,7 +61,10 @@ jobs:
       id-token: write
       checks: read
     steps:
-      - name: Checkout & Auth
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
         uses: ./.github/actions/deploy-cloud-run/001-checkout-auth
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
