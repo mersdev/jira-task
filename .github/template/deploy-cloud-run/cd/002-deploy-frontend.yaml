@@ -1,0 +1,15 @@
+name: Deploy Frontend Cloud Run
+steps:
+  - deploy_frontend:
+      run: |
+        FRONTEND_IMAGE="$DOCKER_USERNAME/$FRONTEND_SERVICE:latest"
+        gcloud run deploy $FRONTEND_SERVICE \
+          --image $FRONTEND_IMAGE \
+          --platform managed \
+          --region $REGION \
+          --allow-unauthenticated \
+          --cpu 1 \
+          --memory 512Mi \
+          --min-instances 0 \
+          --max-instances 1 \
+          --port 80

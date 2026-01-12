@@ -1,4 +1,4 @@
-name: Build and Push Images
+name: Checkout, Auth, Build and Push Images
 steps:
   - checkout: actions/checkout@v4
   - auth: google-github-actions/auth@v2
@@ -7,8 +7,14 @@ steps:
   - setup_gcloud: google-github-actions/setup-gcloud@v2
     with:
       install_components: gcloud,gke-gcloud-auth-plugin
+  - verify_docker_token:
+      run: |
+        if [ -z "${DOCKER_TOKEN:-}" ]; then
+          echo "DOCKER_TOKEN secret is required for Docker Hub pushes" >&2
+          exit 1
+        fi
   - docker_login:
-      run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u $DOCKER_USERNAME --password-stdin
+      run: echo "$DOCKER_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin
   - build_push_backend:
       run: |
         BACKEND_IMAGE="$DOCKER_USERNAME/$BACKEND_SERVICE:latest"

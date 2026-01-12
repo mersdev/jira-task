@@ -15,6 +15,7 @@ env:
   BACKEND_SERVICE: jira-task-backend
   FRONTEND_SERVICE: jira-task-frontend
   DOCKER_USERNAME: merszerodev1023
+  DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
 jobs:
   deploy_backend:
@@ -26,7 +27,7 @@ jobs:
       checks: 'read'
 
     steps:
-      # Template reference: .github/template/deploy-cloud-run/001-build-and-push.yaml
+      # Template reference: .github/template/deploy-cloud-run/ci/001-checkout-auth-build.yaml
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -40,9 +41,15 @@ jobs:
         with:
           install_components: 'gcloud,gke-gcloud-auth-plugin'
 
-      - name: Configure Docker Auth
+      - name: Verify Docker token
         run: |
-          echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u $DOCKER_USERNAME --password-stdin
+          if [ -z "${DOCKER_TOKEN}" ]; then
+            echo "DOCKER_TOKEN secret is required for Docker Hub pushes" >&2
+            exit 1
+          fi
+
+      - name: Configure Docker Auth
+        run: echo "$DOCKER_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin
 
       - name: Build and Push Backend Image
         run: |
@@ -50,7 +57,7 @@ jobs:
           docker build -t $BACKEND_IMAGE ./backend
           docker push $BACKEND_IMAGE
 
-      # Template reference: .github/template/deploy-cloud-run/002-deploy-cloud-run.yaml
+      # Template reference: .github/template/deploy-cloud-run/cd/001-deploy-backend.yaml
       - name: Deploy Backend Cloud Run
         run: |
           BACKEND_IMAGE="$DOCKER_USERNAME/$BACKEND_SERVICE:latest"
@@ -75,7 +82,7 @@ jobs:
       checks: 'read'
 
     steps:
-      # Template reference: .github/template/deploy-cloud-run/001-build-and-push.yaml
+      # Template reference: .github/template/deploy-cloud-run/ci/001-checkout-auth-build.yaml
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -89,9 +96,15 @@ jobs:
         with:
           install_components: 'gcloud,gke-gcloud-auth-plugin'
 
-      - name: Configure Docker Auth
+      - name: Verify Docker token
         run: |
-          echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u $DOCKER_USERNAME --password-stdin
+          if [ -z "${DOCKER_TOKEN}" ]; then
+            echo "DOCKER_TOKEN secret is required for Docker Hub pushes" >&2
+            exit 1
+          fi
+
+      - name: Configure Docker Auth
+        run: echo "$DOCKER_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin
 
       - name: Build and Push Frontend Image
         run: |
@@ -99,7 +112,7 @@ jobs:
           docker build -t $FRONTEND_IMAGE ./frontend
           docker push $FRONTEND_IMAGE
 
-      # Template reference: .github/template/deploy-cloud-run/002-deploy-cloud-run.yaml
+      # Template reference: .github/template/deploy-cloud-run/cd/002-deploy-frontend.yaml
       - name: Deploy Frontend Cloud Run
         run: |
           FRONTEND_IMAGE="$DOCKER_USERNAME/$FRONTEND_SERVICE:latest"

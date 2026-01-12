@@ -1,0 +1,15 @@
+name: Deploy Backend Cloud Run
+steps:
+  - deploy_backend:
+      run: |
+        BACKEND_IMAGE="$DOCKER_USERNAME/$BACKEND_SERVICE:latest"
+        gcloud run deploy $BACKEND_SERVICE \
+          --image $BACKEND_IMAGE \
+          --platform managed \
+          --region $REGION \
+          --allow-unauthenticated \
+          --cpu 1 \
+          --memory 512Mi \
+          --min-instances 0 \
+          --max-instances 1 \
+          --set-env-vars RAILS_ENV=production
