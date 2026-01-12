@@ -54,3 +54,9 @@ variable "free_tier_memory" {
   type        = string
   default     = "512Mi"
 }
+
+variable "github_repo" {
+  description = "GitHub repository for WIF (format: owner/repo)"
+  type        = string
+  default     = "mersdev/jira-task"
+}

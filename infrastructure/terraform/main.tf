@@ -182,10 +182,51 @@ resource "google_cloud_run_v2_service_iam_policy" "frontend_noauth" {
   policy_data = data.google_iam_policy.noauth.policy_data
 }
 
-output "backend_url" {
-  value = google_cloud_run_v2_service.backend.uri
-}
-
 output "frontend_url" {
   value = google_cloud_run_v2_service.frontend.uri
+}
+
+resource "google_iam_workload_identity_pool" "github" {
+  workload_identity_pool_id = "github"
+}
+
+resource "google_iam_workload_identity_pool_provider" "github" {
+  workload_identity_pool_id          = google_iam_workload_identity_pool.github.workload_identity_pool_id
+  workload_identity_pool_provider_id = "github-provider"
+  display_name                       = "GitHub Actions"
+  attribute_mapping = {
+    "google.subject"       = "assertion.sub"
+    "attribute.repository" = "assertion.repository"
+    "attribute.actor"      = "assertion.actor"
+    "attribute.aud"        = "assertion.aud"
+    "attribute.ref"        = "assertion.ref"
+    "attribute.ref_type"   = "assertion.ref_type"
+  }
+  attribute_condition = <<EOT
+    attribute.repository == "${var.github_repo}"
+  EOT
+  oidc {
+    issuer_uri = "https://token.actions.githubusercontent.com"
+  }
+}
+
+resource "google_service_account" "github_actions" {
+  account_id   = "github-actions"
+  display_name = "GitHub Actions"
+}
+
+resource "google_service_account_iam_member" "github_actions_workload_identity" {
+  service_account_id = google_service_account.github_actions.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/*"
+}
+
+output "workload_identity_provider" {
+  value = google_iam_workload_identity_pool_provider.github.name
+  description = "Workload Identity Provider ID for GitHub Actions"
+}
+
+output "service_account_email" {
+  value = google_service_account.github_actions.email
+  description = "Service Account email for GitHub Actions"
 }
