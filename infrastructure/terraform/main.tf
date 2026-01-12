@@ -42,11 +42,6 @@ data "google_secret_manager_secret" "secret_key_base" {
   secret_id = "${var.app_name}-secret-key-base"
 }
 
-data "google_cloud_run_v2_service" "backend" {
-  name     = "${var.app_name}-backend"
-  location = var.region
-}
-
 data "google_cloud_run_v2_service" "frontend" {
   name     = "${var.app_name}-frontend"
   location = var.region
@@ -57,13 +52,6 @@ data "google_iam_policy" "noauth" {
     role = "roles/run.invoker"
     members = ["allUsers"]
   }
-}
-
-resource "google_cloud_run_v2_service_iam_policy" "backend_noauth" {
-  location    = data.google_cloud_run_v2_service.backend.location
-  project     = data.google_cloud_run_v2_service.backend.project
-  name        = data.google_cloud_run_v2_service.backend.name
-  policy_data = data.google_iam_policy.noauth.policy_data
 }
 
 resource "google_cloud_run_v2_service_iam_policy" "frontend_noauth" {
