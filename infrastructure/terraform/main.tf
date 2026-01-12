@@ -28,8 +28,8 @@ provider "google-beta" {
 }
 
 resource "google_secret_manager_secret" "database_url" {
-  project = var.project_id
-  name    = "${var.app_name}-database-url"
+  project    = var.project_id
+  secret_id  = "${var.app_name}-database-url"
   replication {
     auto {}
   }
@@ -41,8 +41,8 @@ resource "google_secret_manager_secret_version" "database_url_version" {
 }
 
 resource "google_secret_manager_secret" "rails_master_key" {
-  project = var.project_id
-  name    = "${var.app_name}-rails-master-key"
+  project    = var.project_id
+  secret_id  = "${var.app_name}-rails-master-key"
   replication {
     auto {}
   }
@@ -54,8 +54,8 @@ resource "google_secret_manager_secret_version" "rails_master_key_version" {
 }
 
 resource "google_secret_manager_secret" "secret_key_base" {
-  project = var.project_id
-  name    = "${var.app_name}-secret-key-base"
+  project    = var.project_id
+  secret_id  = "${var.app_name}-secret-key-base"
   replication {
     auto {}
   }
@@ -78,10 +78,8 @@ resource "google_cloud_run_v2_service" "backend" {
       }
       resources {
         cpu_idle = false
-        limits {
-          cpu    = var.free_tier_cpu
-          memory = var.free_tier_memory
-        }
+        cpu      = var.free_tier_cpu
+        memory   = var.free_tier_memory
       }
       env {
         name  = "RAILS_ENV"
@@ -122,8 +120,7 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 
   traffic {
-    percent         = 100
-    latest_revision = true
+    percent = 100
   }
 
   ingress = "INGRESS_TRAFFIC_ALL"
@@ -141,10 +138,8 @@ resource "google_cloud_run_v2_service" "frontend" {
       }
       resources {
         cpu_idle = false
-        limits {
-          cpu    = var.free_tier_cpu
-          memory = var.free_tier_memory
-        }
+        cpu      = var.free_tier_cpu
+        memory   = var.free_tier_memory
       }
     }
     scaling {
