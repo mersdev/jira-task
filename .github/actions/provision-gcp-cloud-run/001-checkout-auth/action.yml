@@ -1,0 +1,19 @@
+name: checkout-and-auth
+description: Checkout repo and authenticate to GCP via WIF
+inputs:
+  workload_identity_provider:
+    required: true
+    description: Full WIF provider resource name
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload_identity_provider }}
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        install_components: gcloud,gke-gcloud-auth-plugin

@@ -1,6 +1,0 @@
-name: Test Frontend
-steps:
-  - run: |
-      cd frontend
-      npm ci
-      npm run test --if-present

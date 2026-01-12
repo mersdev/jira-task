@@ -1,6 +1,0 @@
-name: Checkout and Auth
-steps:
-  - checkout: actions/checkout@v4
-  - auth: google-github-actions/auth@v2
-    with:
-      workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}

@@ -1,9 +1,0 @@
-name: Checkout and Authenticate
-steps:
-  - checkout: actions/checkout@v4
-  - auth: google-github-actions/auth@v2
-    with:
-      workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-  - setup_gcloud: google-github-actions/setup-gcloud@v2
-    with:
-      install_components: gcloud,gke-gcloud-auth-plugin
