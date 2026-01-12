@@ -1,0 +1,28 @@
+name: frontend-deploy
+description: Deploy frontend Cloud Run service
+inputs:
+  region:
+    required: true
+  service_name:
+    required: true
+  project_id:
+    required: true
+  artifact_repo:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Deploy Frontend Cloud Run
+      shell: bash
+      run: |
+        IMAGE_URI="${{ inputs.region }}-docker.pkg.dev/${{ inputs.project_id }}/${{ inputs.artifact_repo }}/${{ inputs.service_name }}:latest"
+        gcloud run deploy "${{ inputs.service_name }}" \
+          --image "$IMAGE_URI" \
+          --platform managed \
+          --region "${{ inputs.region }}" \
+          --allow-unauthenticated \
+          --cpu 1 \
+          --memory 512Mi \
+          --min-instances 0 \
+          --max-instances 1 \
+          --port 80

@@ -1,0 +1,11 @@
+name: backend-test
+description: Run backend test suite
+runs:
+  using: "composite"
+  steps:
+    - name: Test Backend
+      shell: bash
+      run: |
+        cd backend
+        bundle install --jobs=4 --retry=3
+        bundle exec rails test

@@ -20,46 +20,64 @@ env:
 jobs:
   deploy_backend:
     name: Deploy Backend
-    uses: ./.github/workflows/deploy-cloud-run-reusable.yml
-    secrets:
-      gcp_workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-    with:
-      project_id: ${{ env.PROJECT_ID }}
-      region: ${{ env.REGION }}
-      artifact_repo: ${{ env.ARTIFACT_REPO }}
-      service_name: ${{ env.BACKEND_SERVICE }}
-      image_context: ./backend
-      test_command: |
-        cd backend
-        bundle install --jobs=4 --retry=3
-        bundle exec rails test
-      deploy_args: |
-        --allow-unauthenticated \
-        --cpu 1 \
-        --memory 512Mi \
-        --min-instances 0 \
-        --max-instances 1 \
-        --set-env-vars RAILS_ENV=production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      checks: read
+    steps:
+      - name: Checkout & Auth
+        uses: ./.github/actions/deploy-cloud-run/001-checkout-auth
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Test Backend
+        uses: ./.github/actions/deploy-cloud-run/002-backend-test
+
+      - name: Build Backend Image
+        uses: ./.github/actions/deploy-cloud-run/003-backend-build
+        with:
+          region: ${{ env.REGION }}
+          project_id: ${{ env.PROJECT_ID }}
+          artifact_repo: ${{ env.ARTIFACT_REPO }}
+          service_name: ${{ env.BACKEND_SERVICE }}
+
+      - name: Deploy Backend
+        uses: ./.github/actions/deploy-cloud-run/004-backend-deploy
+        with:
+          region: ${{ env.REGION }}
+          project_id: ${{ env.PROJECT_ID }}
+          artifact_repo: ${{ env.ARTIFACT_REPO }}
+          service_name: ${{ env.BACKEND_SERVICE }}
 
   deploy_frontend:
     name: Deploy Frontend
-    uses: ./.github/workflows/deploy-cloud-run-reusable.yml
-    secrets:
-      gcp_workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-    with:
-      project_id: ${{ env.PROJECT_ID }}
-      region: ${{ env.REGION }}
-      artifact_repo: ${{ env.ARTIFACT_REPO }}
-      service_name: ${{ env.FRONTEND_SERVICE }}
-      image_context: ./frontend
-      test_command: |
-        cd frontend
-        npm ci
-        npm run test --if-present
-      deploy_args: |
-        --allow-unauthenticated \
-        --cpu 1 \
-        --memory 512Mi \
-        --min-instances 0 \
-        --max-instances 1 \
-        --port 80
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      checks: read
+    steps:
+      - name: Checkout & Auth
+        uses: ./.github/actions/deploy-cloud-run/001-checkout-auth
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Test Frontend
+        uses: ./.github/actions/deploy-cloud-run/005-frontend-test
+
+      - name: Build Frontend Image
+        uses: ./.github/actions/deploy-cloud-run/006-frontend-build
+        with:
+          region: ${{ env.REGION }}
+          project_id: ${{ env.PROJECT_ID }}
+          artifact_repo: ${{ env.ARTIFACT_REPO }}
+          service_name: ${{ env.FRONTEND_SERVICE }}
+
+      - name: Deploy Frontend
+        uses: ./.github/actions/deploy-cloud-run/007-frontend-deploy
+        with:
+          region: ${{ env.REGION }}
+          project_id: ${{ env.PROJECT_ID }}
+          artifact_repo: ${{ env.ARTIFACT_REPO }}
+          service_name: ${{ env.FRONTEND_SERVICE }}
