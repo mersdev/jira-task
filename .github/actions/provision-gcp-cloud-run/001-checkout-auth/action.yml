@@ -4,6 +4,9 @@ inputs:
   workload_identity_provider:
     required: true
     description: Full WIF provider resource name
+  service_account_email:
+    required: true
+    description: Service account to impersonate
 runs:
   using: "composite"
   steps:
@@ -11,6 +14,7 @@ runs:
       uses: google-github-actions/auth@v2
       with:
         workload_identity_provider: ${{ inputs.workload_identity_provider }}
+        service_account: ${{ inputs.service_account_email }}
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
       with:

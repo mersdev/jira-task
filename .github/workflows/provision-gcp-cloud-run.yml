@@ -21,6 +21,7 @@ on:
 
 env:
   TERRAFORM_DIR: infrastructure/terraform
+  GCP_SERVICE_ACCOUNT: github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com
 
 jobs:
   provision:
@@ -38,6 +39,7 @@ jobs:
         uses: ./.github/actions/provision-gcp-cloud-run/001-checkout-auth
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account_email: ${{ env.GCP_SERVICE_ACCOUNT }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3

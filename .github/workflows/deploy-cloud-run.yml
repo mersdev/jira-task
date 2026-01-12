@@ -16,6 +16,7 @@ env:
   BACKEND_SERVICE: jira-task-backend
   FRONTEND_SERVICE: jira-task-frontend
   ARTIFACT_REPO: jira-task
+  GCP_SERVICE_ACCOUNT: github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com
 
 jobs:
   deploy_backend:
@@ -33,6 +34,7 @@ jobs:
         uses: ./.github/actions/deploy-cloud-run/001-checkout-auth
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account_email: ${{ env.GCP_SERVICE_ACCOUNT }}
 
       - name: Test Backend
         uses: ./.github/actions/deploy-cloud-run/002-backend-test
@@ -68,6 +70,7 @@ jobs:
         uses: ./.github/actions/deploy-cloud-run/001-checkout-auth
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account_email: ${{ env.GCP_SERVICE_ACCOUNT }}
 
       - name: Test Frontend
         uses: ./.github/actions/deploy-cloud-run/005-frontend-test
