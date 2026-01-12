@@ -121,10 +121,6 @@ resource "google_cloud_run_v2_service" "backend" {
     }
   }
 
-  traffic {
-    percent = 100
-  }
-
   ingress = "INGRESS_TRAFFIC_ALL"
 }
 
@@ -150,10 +146,6 @@ resource "google_cloud_run_v2_service" "frontend" {
       max_instance_count = 1
       min_instance_count = 0
     }
-  }
-
-  traffic {
-    percent = 100
   }
 
   ingress = "INGRESS_TRAFFIC_ALL"
