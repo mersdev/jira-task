@@ -78,8 +78,10 @@ resource "google_cloud_run_v2_service" "backend" {
       }
       resources {
         cpu_idle = false
-        cpu      = var.free_tier_cpu
-        memory   = var.free_tier_memory
+        limits = {
+          cpu    = var.free_tier_cpu
+          memory = var.free_tier_memory
+        }
       }
       env {
         name  = "RAILS_ENV"
@@ -138,8 +140,10 @@ resource "google_cloud_run_v2_service" "frontend" {
       }
       resources {
         cpu_idle = false
-        cpu      = var.free_tier_cpu
-        memory   = var.free_tier_memory
+        limits = {
+          cpu    = var.free_tier_cpu
+          memory = var.free_tier_memory
+        }
       }
     }
     scaling {
@@ -149,8 +153,7 @@ resource "google_cloud_run_v2_service" "frontend" {
   }
 
   traffic {
-    percent         = 100
-    latest_revision = true
+    percent = 100
   }
 
   ingress = "INGRESS_TRAFFIC_ALL"
