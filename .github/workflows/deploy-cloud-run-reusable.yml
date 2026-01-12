@@ -1,0 +1,82 @@
+name: Deploy Cloud Run Reusable
+
+on:
+  workflow_call:
+    inputs:
+      project_id:
+        required: true
+        type: string
+      region:
+        required: true
+        type: string
+      artifact_repo:
+        required: true
+        type: string
+      service_name:
+        required: true
+        type: string
+      image_context:
+        required: true
+        type: string
+      test_command:
+        required: true
+        type: string
+      deploy_args:
+        required: true
+        type: string
+    secrets:
+      gcp_workload_identity_provider:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.service_name }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      checks: read
+
+    env:
+      PROJECT_ID: ${{ inputs.project_id }}
+      REGION: ${{ inputs.region }}
+      ARTIFACT_REPO: ${{ inputs.artifact_repo }}
+      SERVICE_NAME: ${{ inputs.service_name }}
+      IMAGE_CONTEXT: ${{ inputs.image_context }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.gcp_workload_identity_provider }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: gcloud,gke-gcloud-auth-plugin
+
+      - name: Run tests
+        run: ${{ inputs.test_command }}
+
+      - name: Configure Artifact Registry Docker Auth
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Build and Push Image
+        run: |
+          IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO}/${SERVICE_NAME}:latest"
+          docker build -t "$IMAGE_URI" "$IMAGE_CONTEXT"
+          docker push "$IMAGE_URI"
+        shell: bash
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO}/${SERVICE_NAME}:latest"
+          gcloud run deploy "$SERVICE_NAME" \
+            --image "$IMAGE_URI" \
+            --platform managed \
+            --region "$REGION" \
+            ${{ inputs.deploy_args }}
+        shell: bash
