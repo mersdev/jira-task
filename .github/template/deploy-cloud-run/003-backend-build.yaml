@@ -1,0 +1,7 @@
+name: Build and Push Backend
+steps:
+  - configure_docker: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+  - run: |
+      BACKEND_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO}/${BACKEND_SERVICE}:latest"
+      docker build -t $BACKEND_IMAGE ./backend
+      docker push $BACKEND_IMAGE

@@ -1,0 +1,7 @@
+name: Build and Push Frontend
+steps:
+  - configure_docker: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+  - run: |
+      FRONTEND_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO}/${FRONTEND_SERVICE}:latest"
+      docker build -t $FRONTEND_IMAGE ./frontend
+      docker push $FRONTEND_IMAGE
