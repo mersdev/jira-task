@@ -185,13 +185,6 @@ GEMINI_API_KEY=your-gemini-api-key
 
 ## Deployment
 
-The application is configured for Docker deployment with [Kamal](https://kamal-deploy.org):
-
-```bash
-# Build and deploy
-kamal deploy
-```
-
 ## License
 
 MIT
