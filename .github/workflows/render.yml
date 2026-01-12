@@ -12,16 +12,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Deploy to Render
-        uses: hamirthakar/render-deploy-action@v1.0.0
+        uses: JorgeLNJunior/render-deploy@v1
         with:
-          service-id: ${{ secrets.RENDER_SERVICE_ID }}
-          api-key: ${{ secrets.RENDER_API_KEY }}
-          environment: ${{ secrets.RENDER_ENVIRONMENT }}
+          serviceId: ${{ secrets.RENDER_SERVICE_ID }}
+          apiKey: ${{ secrets.RENDER_API_KEY }}
