@@ -8,14 +8,14 @@ on:
       - 'backend/**'
       - 'frontend/**'
       - '.github/workflows/deploy-cloud-run.yml'
+  workflow_dispatch: {}
 
 env:
   PROJECT_ID: gen-lang-client-0725350933
   REGION: us-central1
   BACKEND_SERVICE: jira-task-backend
   FRONTEND_SERVICE: jira-task-frontend
-  DOCKER_USERNAME: merszerodev1023
-  DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+  ARTIFACT_REPO: jira-task
 
 jobs:
   deploy_backend:
@@ -27,7 +27,7 @@ jobs:
       checks: 'read'
 
     steps:
-      # Template reference: .github/template/deploy-cloud-run/ci/001-checkout-auth-build.yaml
+      # Template reference: .github/template/deploy-cloud-run/ci/001-checkout-auth-build.yaml (Artifact Registry)
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -48,14 +48,15 @@ jobs:
             exit 1
           fi
 
-      - name: Configure Docker Auth
-        run: echo "$DOCKER_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin
+      - name: Configure Artifact Registry Docker Auth
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 
       - name: Build and Push Backend Image
         run: |
-          BACKEND_IMAGE="$DOCKER_USERNAME/$BACKEND_SERVICE:latest"
+          BACKEND_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO}/${BACKEND_SERVICE}:latest"
           docker build -t $BACKEND_IMAGE ./backend
           docker push $BACKEND_IMAGE
+
 
       # Template reference: .github/template/deploy-cloud-run/cd/001-deploy-backend.yaml
       - name: Deploy Backend Cloud Run
@@ -82,7 +83,7 @@ jobs:
       checks: 'read'
 
     steps:
-      # Template reference: .github/template/deploy-cloud-run/ci/001-checkout-auth-build.yaml
+      # Template reference: .github/template/deploy-cloud-run/ci/001-checkout-auth-build.yaml (Artifact Registry)
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -103,14 +104,15 @@ jobs:
             exit 1
           fi
 
-      - name: Configure Docker Auth
-        run: echo "$DOCKER_TOKEN" | docker login -u $DOCKER_USERNAME --password-stdin
+      - name: Configure Artifact Registry Docker Auth
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
 
       - name: Build and Push Frontend Image
         run: |
-          FRONTEND_IMAGE="$DOCKER_USERNAME/$FRONTEND_SERVICE:latest"
+          FRONTEND_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${ARTIFACT_REPO}/${FRONTEND_SERVICE}:latest"
           docker build -t $FRONTEND_IMAGE ./frontend
           docker push $FRONTEND_IMAGE
+
 
       # Template reference: .github/template/deploy-cloud-run/cd/002-deploy-frontend.yaml
       - name: Deploy Frontend Cloud Run
