@@ -1,0 +1,11 @@
+name: Terraform Apply
+steps:
+  - setup_terraform: hashicorp/setup-terraform@v3
+    with:
+      terraform_version: 1.9.0
+  - init:
+      run: terraform init
+      working-directory: infrastructure/terraform
+  - apply:
+      run: terraform ${TF_ACTION:-apply} -var-file=terraform.tfvars.example -auto-approve
+      working-directory: infrastructure/terraform

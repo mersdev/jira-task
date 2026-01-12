@@ -223,6 +223,10 @@ GEMINI_API_KEY=your-key-here
 ### Backend
 Uses standard Rails credentials and environment variables. See `config/database.yml` for PostgreSQL config.
 
+## GitHub Actions Workflow Naming
+- Workflow filenames **must be verb-based**, e.g., `provision-gcp-cloud-run.yml`, not generic names like `terraform.yml`.
+- Provide a template folder under `.github/template/<workflow-name>/` with numbered step YAMLs (`001-*.yaml`, `002-*.yaml`, …) describing the workflow steps.
+
 ## Common Tasks
 
 ### Adding a New Feature

@@ -1,4 +1,4 @@
-name: Deploy to CloudRun
+name: Deploy Cloud Run
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     paths:
       - 'backend/**'
       - 'frontend/**'
-      - '.github/workflows/deploy.yml'
+      - '.github/workflows/deploy-cloud-run.yml'
 
 env:
   PROJECT_ID: gen-lang-client-0725350933
@@ -17,7 +17,7 @@ env:
   DOCKER_USERNAME: merszerodev1023
 
 jobs:
-  deploy-backend:
+  deploy_backend:
     name: Deploy Backend
     runs-on: ubuntu-latest
     permissions:
@@ -26,6 +26,7 @@ jobs:
       checks: 'read'
 
     steps:
+      # Template reference: .github/template/deploy-cloud-run/001-build-and-push.yaml
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -49,7 +50,8 @@ jobs:
           docker build -t $BACKEND_IMAGE ./backend
           docker push $BACKEND_IMAGE
 
-      - name: Deploy to CloudRun
+      # Template reference: .github/template/deploy-cloud-run/002-deploy-cloud-run.yaml
+      - name: Deploy Backend Cloud Run
         run: |
           BACKEND_IMAGE="$DOCKER_USERNAME/$BACKEND_SERVICE:latest"
 
@@ -64,7 +66,7 @@ jobs:
             --max-instances 1 \
             --set-env-vars RAILS_ENV=production
 
-  deploy-frontend:
+  deploy_frontend:
     name: Deploy Frontend
     runs-on: ubuntu-latest
     permissions:
@@ -73,6 +75,7 @@ jobs:
       checks: 'read'
 
     steps:
+      # Template reference: .github/template/deploy-cloud-run/001-build-and-push.yaml
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -96,7 +99,8 @@ jobs:
           docker build -t $FRONTEND_IMAGE ./frontend
           docker push $FRONTEND_IMAGE
 
-      - name: Deploy to CloudRun
+      # Template reference: .github/template/deploy-cloud-run/002-deploy-cloud-run.yaml
+      - name: Deploy Frontend Cloud Run
         run: |
           FRONTEND_IMAGE="$DOCKER_USERNAME/$FRONTEND_SERVICE:latest"
 

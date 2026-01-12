@@ -1,0 +1,12 @@
+```mermaid
+flowchart TD
+  A[Set project \n gcloud config set project] --> B[Enable APIs \n run/iam/iamcredentials/secretmanager/artifactregistry/containerregistry/cloudbuild]
+  B --> C[Ensure service account github-actions]
+  C --> D[Ensure WIF pool github]
+  D --> E[Ensure provider github-provider \n issuer https://token.actions.githubusercontent.com \n condition repo == mersdev/jira-task]
+  E --> F[Grant roles to principalSet \n WIF admin, SA admin/user, Run admin, Secret Manager admin]
+  F --> G[Bind repo subject to service account \n roles/iam.workloadIdentityUser]
+  G --> H[Grant SA roles \n run.admin, artifactregistry.writer, storage.admin]
+  H --> I[Update GitHub secret GCP_WORKLOAD_IDENTITY_PROVIDER \n (if gh available)]
+  I --> J[Optionally run GitHub Actions terraform.yml]
+```

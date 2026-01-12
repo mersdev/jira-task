@@ -26,7 +26,7 @@ Required GitHub secrets:
 |--------|-------------|
 | `GCP_PROJECT_ID` | `gen-lang-client-0725350933` |
 | `GCP_REGION` | `us-central1` |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/1081842732564/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/1081842732564/locations/global/workloadIdentityPools/github/providers/github-provider` |
 | `GCP_SERVICE_ACCOUNT` | `github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com` |
 | `DOCKER_TOKEN` | Docker Hub access token |
 | `DATABASE_URL` | PostgreSQL connection URL |
@@ -53,7 +53,22 @@ Run the automated setup script to enable APIs and configure workload identity:
 
 ```bash
 cd infrastructure
-./setup-gcp.sh
+./prepare-gcp.sh
+```
+
+### Provisioning Flow (Mermaid)
+
+```mermaid
+flowchart TD
+  A[Set project] --> B[Enable APIs]
+  B --> C[Ensure service account]
+  C --> D[Ensure WIF pool]
+  D --> E[Ensure provider]
+  E --> F[Grant principalSet roles]
+  F --> G[Bind repo subject to SA]
+  G --> H[Grant SA roles]
+  H --> I[Update GitHub secret]
+  I --> J[Run terraform.yml workflow]
 ```
 
 ## Manual Setup Instructions
@@ -84,38 +99,40 @@ gcloud iam service-accounts create github-actions \
   --display-name="GitHub Actions"
 
 # Create workload identity pool
-gcloud iam workload-identity-pools create github-pool \
-  --location="global" \
-  --display-name="GitHub Pool"
+POOL_NAME=github
+gcloud iam workload-identity-pools describe ${POOL_NAME} --location="global" --format="value(name)" || \
+  gcloud iam workload-identity-pools create ${POOL_NAME} \
+    --location="global" \
+    --display-name="GitHub"
 
 # Get project number
 PROJECT_NUMBER=$(gcloud projects describe gen-lang-client-0725350933 --format="value(projectNumber)")
 
-# Get pool name
-POOL_NAME=$(gcloud iam workload-identity-pools describe github-pool --location="global" --format="value(name)")
-
 # Create workload identity provider
-gcloud iam workload-identity-pools providers create-oidc github-provider \
-  --location="global" \
-  --workload-identity-pool="github-pool" \
-  --issuer-uri="https://token.actions.githubusercontent.com" \
-  --attribute-mapping="google.subject=assertion.sub" \
-  --attribute-condition="assertion.repository=='baoren/jira-task'"
+PROVIDER_NAME=github-provider
+gcloud iam workload-identity-pools providers describe ${PROVIDER_NAME} \
+  --location="global" --workload-identity-pool="${POOL_NAME}" --format="value(name)" || \
+  gcloud iam workload-identity-pools providers create-oidc ${PROVIDER_NAME} \
+    --location="global" \
+    --workload-identity-pool="${POOL_NAME}" \
+    --issuer-uri="https://token.actions.githubusercontent.com" \
+    --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+    --attribute-condition="attribute.repository=='mersdev/jira-task'"
 
-# Add IAM policy binding
+# Add IAM policy binding for repo subject
 gcloud iam service-accounts add-iam-policy-binding \
   --role="roles/iam.workloadIdentityUser" \
-  --member="principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/subject/repo:baoren/jira-task" \
+  --member="principal://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/${POOL_NAME}/subject/repo:mersdev/jira-task" \
   github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com
 
-# Add additional permissions
+# Add project-level permissions for principalSet (GitHub OIDC)
 gcloud projects add-iam-policy-binding gen-lang-client-0725350933 \
-  --member="serviceAccount:github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com" \
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_NAME}/*" \
   --role="roles/run.admin"
 
 gcloud projects add-iam-policy-binding gen-lang-client-0725350933 \
-  --member="serviceAccount:github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com" \
-  --role="roles/artifactregistry.writer"
+  --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_NAME}/*" \
+  --role="roles/secretmanager.admin"
 ```
 
 ### 4. Initialize Terraform
