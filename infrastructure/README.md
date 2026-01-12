@@ -8,6 +8,45 @@ This directory contains Terraform configuration for deploying the application to
 2. Terraform >= 1.0 installed
 3. A Google Cloud project with Cloud Run and Container Registry enabled
 
+## Secrets Management
+
+### GitHub Actions Secrets
+
+Copy `.env.example` from the project root and add values to GitHub:
+
+```bash
+# Project root
+cp .env.example .env
+# Fill in your values, then add to GitHub:
+# Settings > Secrets and variables > Actions
+```
+
+Required GitHub secrets:
+| Secret | Description |
+|--------|-------------|
+| `GCP_PROJECT_ID` | `gen-lang-client-0725350933` |
+| `GCP_REGION` | `us-central1` |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/1081842732564/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
+| `GCP_SERVICE_ACCOUNT` | `github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com` |
+| `DOCKER_TOKEN` | Docker Hub access token |
+| `DATABASE_URL` | PostgreSQL connection URL |
+| `RAILS_MASTER_KEY` | Rails master key |
+| `SECRET_KEY_BASE` | Rails secret key base |
+
+### Terraform Variables (Local)
+
+Copy `.env.example` from this directory for local Terraform:
+
+```bash
+cd infrastructure
+cp .env.example .env
+# Fill in your values
+source .env
+cd terraform
+terraform init
+terraform plan
+```
+
 ## Quick Setup
 
 Run the automated setup script to enable APIs and configure workload identity:
@@ -56,10 +95,12 @@ PROJECT_NUMBER=$(gcloud projects describe gen-lang-client-0725350933 --format="v
 POOL_NAME=$(gcloud iam workload-identity-pools describe github-pool --location="global" --format="value(name)")
 
 # Create workload identity provider
-gcloud iam workload-identity-pools providers create-github github-provider \
+gcloud iam workload-identity-pools providers create-oidc github-provider \
   --location="global" \
   --workload-identity-pool="github-pool" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor"
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub" \
+  --attribute-condition="assertion.repository=='baoren/jira-task'"
 
 # Add IAM policy binding
 gcloud iam service-accounts add-iam-policy-binding \
@@ -77,26 +118,12 @@ gcloud projects add-iam-policy-binding gen-lang-client-0725350933 \
   --role="roles/artifactregistry.writer"
 ```
 
-### 4. Set GitHub Secrets
-
-Configure the following secrets in your GitHub repository:
-
-| Secret | Value |
-|--------|-------|
-| `GCP_PROJECT_ID` | `gen-lang-client-0725350933` |
-| `GCP_REGION` | `us-central1` |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/$(gcloud projects describe gen-lang-client-0725350933 --format="value(projectNumber)")/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
-| `GCP_SERVICE_ACCOUNT` | `github-actions@gen-lang-client-0725350933.iam.gserviceaccount.com` |
-| `DOCKER_TOKEN` | Docker Hub access token (generate at https://hub.docker.com/settings/security) |
-| `DATABASE_URL` | `postgresql://postgres:[YOUR_PASSWORD]@db.cwgvrjmfjgglxfeprwzi.supabase.co:5432/postgres` |
-| `RAILS_MASTER_KEY` | (your Rails master key) |
-| `SECRET_KEY_BASE` | (your Rails secret key base) |
-
-### 5. Initialize Terraform
+### 4. Initialize Terraform
 
 ```bash
 cd infrastructure/terraform
 cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
 terraform init
 terraform plan
 terraform apply
@@ -132,6 +159,7 @@ infrastructure/
 │   ├── main.tf              # CloudRun service definitions
 │   ├── variables.tf         # Input variables
 │   └── terraform.tfvars.example  # Example configuration
+├── .env.example             # Terraform variables template
 ├── setup-gcp.sh             # Automated GCP setup script
 └── README.md               # This file
 ```
