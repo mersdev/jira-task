@@ -37,7 +37,6 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -52,14 +51,14 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: |
-          terraform ${{ github.event.inputs.action }} -var-file=tfvars.example -auto-approve
+          terraform ${{ github.event.inputs.action }} -var-file=terraform.tfvars.example -auto-approve
 
       - name: Terraform Plan
         if: github.event_name == 'push'
         working-directory: ${{ env.TERRAFORM_DIR }}
-        run: terraform plan -var-file=tfvars.example
+        run: terraform plan -var-file=terraform.tfvars.example
 
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         working-directory: ${{ env.TERRAFORM_DIR }}
-        run: terraform apply -var-file=tfvars.example -auto-approve
+        run: terraform apply -var-file=terraform.tfvars.example -auto-approve
