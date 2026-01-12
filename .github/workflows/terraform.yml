@@ -1,0 +1,65 @@
+name: Terraform Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/terraform/**'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - plan
+          - destroy
+
+env:
+  TERRAFORM_DIR: infrastructure/terraform
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Initialize Terraform
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform init
+
+      - name: Terraform ${{ github.event.inputs.action || 'apply' }}
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: |
+          terraform ${{ github.event.inputs.action }} -var-file=tfvars.example -auto-approve
+
+      - name: Terraform Plan
+        if: github.event_name == 'push'
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform plan -var-file=tfvars.example
+
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform apply -var-file=tfvars.example -auto-approve
