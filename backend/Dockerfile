@@ -20,7 +20,7 @@ RUN apk add --no-cache \
     build-base \
     git \
     libpq-dev \
-    libyaml \
+    yaml-dev \
     pkgconfig \
     nodejs \
     yarn \
