@@ -177,11 +177,14 @@ jira-task/
 ### Frontend (in `frontend/.env.local`)
 ```
 GEMINI_API_KEY=your-gemini-api-key
+VITE_API_URL=http://localhost:3000
 ```
+Defaults to `http://localhost:3000` if unset.
 
 ### Backend (uses standard Rails credentials)
-- `config/database.yml` for PostgreSQL config
+- `config/database.yml` for PostgreSQL config (defaults: `DB_HOST=localhost`, `DB_PORT=5432`, `DB_USERNAME=postgres`, `DB_PASSWORD=postgres`, `DB_NAME=devdb`, `DB_NAME_TEST=backend_test`)
 - `config/credentials.yml.enc` for secrets
+- Use `DB_HOST=host.containers.internal` when Rails runs in Podman and Postgres is on the host network.
 
 ## Deployment
 

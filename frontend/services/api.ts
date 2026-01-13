@@ -71,7 +71,7 @@ export const api = {
   },
 
   subtasks: {
-    create: async (taskId: string, title: string): Promise<Subtask> => {
+    create: async (taskId: string, title: string): Promise<Task> => {
       const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/create_subtask`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -79,10 +79,10 @@ export const api = {
           subtask: { title, completed: false }
         })
       });
-      return handleResponse<Subtask>(response);
+      return handleResponse<Task>(response);
     },
 
-    update: async (taskId: string, subtaskId: string, updates: Partial<Subtask>): Promise<Subtask> => {
+    update: async (taskId: string, subtaskId: string, updates: Partial<Subtask>): Promise<Task> => {
       const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/update_subtask/${subtaskId}`, {
         method: 'PATCH',
         headers: getAuthHeaders(),
@@ -90,7 +90,7 @@ export const api = {
           subtask: updates
         })
       });
-      return handleResponse<Subtask>(response);
+      return handleResponse<Task>(response);
     },
 
     delete: async (taskId: string, subtaskId: string): Promise<void> => {

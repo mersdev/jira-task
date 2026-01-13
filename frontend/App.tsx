@@ -235,7 +235,7 @@ export const App: React.FC = () => {
                 ? { ...updatedTask, subtasks: updatedTask.subtasks.map(st => ({ ...st, key: st.id })) }
                 : t
             ));
-            return updatedTask.subtasks[updatedTask.subtasks.length - 1];
+            return updatedTask;
           }}
           onDeleteSubtask={async (taskId, subtaskId) => {
             await api.subtasks.delete(taskId, subtaskId);

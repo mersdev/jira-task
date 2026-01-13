@@ -8,9 +8,9 @@ interface TaskModalProps {
   onClose: () => void;
   onUpdate: (updatedTask: Task) => Promise<void>;
   onDelete: (taskId: string) => Promise<void>;
-  onAddSubtask: (taskId: string, title: string) => Promise<Subtask>;
+  onAddSubtask: (taskId: string, title: string) => Promise<Task>;
   onDeleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
-  onToggleSubtask: (taskId: string, subtaskId: string, completed: boolean) => Promise<Subtask>;
+  onToggleSubtask: (taskId: string, subtaskId: string, completed: boolean) => Promise<Task>;
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, onAddSubtask, onDeleteSubtask, onToggleSubtask }) => {
@@ -100,10 +100,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onU
 
         try {
           const updatedTask = await onAddSubtask(task.id, val);
+          const backendSubtasks = updatedTask.subtasks ?? [];
+
           setEditedTask(prev => ({
             ...updatedTask,
             subtasks: prev.subtasks.map(st => {
-              const backendSubtask = updatedTask.subtasks.find(s => s.id === st.id || s.id === tempKey);
+              const backendSubtask = backendSubtasks.find(s => s.id === st.id || s.id === tempKey);
               if (backendSubtask) {
                 return { ...backendSubtask, key: st.key || backendSubtask.id };
               }

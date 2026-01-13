@@ -1,8 +1,0 @@
-project_id      = "gen-lang-client-0725350933"
-region          = "us-central1"
-app_name        = "jira-task"
-backend_image   = "merszerodev1023/jira-task-backend:latest"
-frontend_image  = "merszerodev1023/jira-task-frontend:latest"
-database_url    = "postgresql://postgres:[YOUR_PASSWORD]@db.cwgvrjmfjgglxfeprwzi.supabase.co:5432/postgres"
-rails_master_key = "your-rails-master-key"
-secret_key_base = "your-secret-key-base"
