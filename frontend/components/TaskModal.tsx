@@ -104,18 +104,16 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onU
 
           setEditedTask(prev => ({
             ...updatedTask,
-            subtasks: prev.subtasks.map(st => {
-              if (st.key === tempKey || st.id === tempKey) {
-                const backendSubtask = backendSubtasks.find(s => s.title === st.title);
-                if (backendSubtask) {
-                  return { ...backendSubtask, key: backendSubtask.id };
-                }
+            subtasks: backendSubtasks.map(bst => {
+              const localSt = prev.subtasks.find(st => st.key === tempKey && st.title === bst.title);
+              if (localSt) {
+                return { ...bst, key: localSt.key };
               }
-              const backendSubtask = backendSubtasks.find(s => s.id === st.id);
-              if (backendSubtask) {
-                return { ...backendSubtask, key: st.key };
+              const existingSt = prev.subtasks.find(st => st.id === bst.id);
+              if (existingSt) {
+                return { ...bst, key: existingSt.key };
               }
-              return st;
+              return { ...bst, key: bst.id };
             })
           }));
         } catch (error) {

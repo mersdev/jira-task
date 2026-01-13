@@ -249,9 +249,9 @@ export const App: React.FC = () => {
             const updatedTask = await api.subtasks.update(taskId, subtaskId, { completed });
             setTasks(prev => prev.map(t => 
               t.id === taskId 
-                ? { ...updatedTask, subtasks: t.subtasks.map(st => {
-                    const backendSubtask = updatedTask.subtasks.find(s => s.id === st.id);
-                    return backendSubtask ? { ...backendSubtask, key: st.key || st.id } : st;
+                ? { ...updatedTask, subtasks: updatedTask.subtasks.map(st => {
+                    const localSt = t.subtasks.find(lt => lt.key === st.id || lt.id === st.id);
+                    return { ...st, key: localSt?.key || st.id };
                   })}
                 : t
             ));
