@@ -3,7 +3,9 @@ set -e
 
 cmd="$*"
 if printf '%s' "$cmd" | grep -q "rails server"; then
-  bundle exec rails db:prepare
+  if [ "${SKIP_DB_PREPARE:-false}" != "true" ]; then
+    bundle exec rails db:prepare
+  fi
 fi
 
 exec "$@"
