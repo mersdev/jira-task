@@ -61,4 +61,5 @@ EXPOSE 3000
 
 ENTRYPOINT ["/app/bin/docker-entrypoint"]
 
-CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "3000"]
+# Honor Cloud Run-provided $PORT (default 3000 locally)
+CMD ["/bin/sh", "-c", "bundle exec rails server -b 0.0.0.0 -p ${PORT:-3000}"]
