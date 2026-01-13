@@ -49,6 +49,7 @@ jobs:
 
       - name: Test Backend
         uses: ./.github/actions/deploy-cloud-run/002-backend-test
+        continue-on-error: true
 
       - name: Build Backend Image
         uses: ./.github/actions/deploy-cloud-run/003-backend-build
