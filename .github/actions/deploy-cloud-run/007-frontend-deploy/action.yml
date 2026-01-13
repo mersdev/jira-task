@@ -9,6 +9,8 @@ inputs:
     required: true
   artifact_repo:
     required: true
+  service_account_email:
+    required: true
 runs:
   using: "composite"
   steps:
@@ -20,6 +22,7 @@ runs:
           --image "$IMAGE_URI" \
           --platform managed \
           --region "${{ inputs.region }}" \
+          --service-account "${{ inputs.service_account_email }}" \
           --allow-unauthenticated \
           --cpu 1 \
           --memory 512Mi \
