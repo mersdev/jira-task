@@ -161,9 +161,9 @@ jira-task/
 ### Subtasks
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/tasks/:task_id/subtasks` | Create subtask |
-| PATCH | `/tasks/:task_id/subtasks/:id` | Update subtask |
-| DELETE | `/tasks/:task_id/subtasks/:id` | Delete subtask |
+| POST | `/tasks/:task_id/create_subtask` | Create subtask |
+| PATCH | `/tasks/:task_id/update_subtask/:id` | Update subtask |
+| DELETE | `/tasks/:task_id/destroy_subtask/:id` | Delete subtask |
 
 ## Auto Status Logic
 
@@ -181,12 +181,37 @@ VITE_API_URL=http://localhost:3000
 ```
 Defaults to `http://localhost:3000` if unset.
 
-### Backend (uses standard Rails credentials)
+### Backend (uses environment variables)
 - `config/database.yml` for PostgreSQL config (defaults: `DB_HOST=localhost`, `DB_PORT=5432`, `DB_USERNAME=postgres`, `DB_PASSWORD=postgres`, `DB_NAME=devdb`, `DB_NAME_TEST=backend_test`)
-- `config/credentials.yml.enc` for secrets
+- `config/credentials.yml.enc` for Rails secrets
 - Use `DB_HOST=host.containers.internal` when Rails runs in Podman and Postgres is on the host network.
 
-## Deployment
+## Podman Setup
+
+To run the backend in Podman with the database on the host network:
+
+1. Start PostgreSQL on the host (e.g., via Homebrew or direct install)
+
+2. Run the backend in Podman with host networking:
+   ```bash
+   cd backend
+   podman run -it --rm -p 3000:3000 \
+     -e DB_HOST=host.containers.internal \
+     -e DB_PORT=5432 \
+     -e DB_USERNAME=postgres \
+     -e DB_PASSWORD=postgres \
+     -e DB_NAME=devdb \
+     -v "$(pwd)":/app \
+     -w /app \
+     ruby:3.4 \
+     bash -c "bundle install && bin/rails server"
+   ```
+
+3. Frontend runs locally:
+   ```bash
+   cd frontend
+   npm run dev
+   ```
 
 ## License
 
