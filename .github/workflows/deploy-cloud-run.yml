@@ -67,6 +67,7 @@ jobs:
           artifact_repo: ${{ env.ARTIFACT_REPO }}
           service_name: ${{ env.BACKEND_SERVICE }}
           service_account_email: ${{ env.GCP_SERVICE_ACCOUNT }}
+        continue-on-error: true
 
   deploy_frontend:
     name: Deploy Frontend
@@ -104,3 +105,4 @@ jobs:
           artifact_repo: ${{ env.ARTIFACT_REPO }}
           service_name: ${{ env.FRONTEND_SERVICE }}
           service_account_email: ${{ env.GCP_SERVICE_ACCOUNT }}
+        continue-on-error: true
