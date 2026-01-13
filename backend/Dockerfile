@@ -57,7 +57,7 @@ COPY --from=builder /app /app
 
 USER rails
 
-EXPOSE 3000
+EXPOSE 8080
 
 ENTRYPOINT ["/app/bin/docker-entrypoint"]
 

@@ -29,4 +29,5 @@ runs:
           --memory 512Mi \
           --min-instances 0 \
           --max-instances 1 \
-          --set-env-vars RAILS_ENV=production
+          --set-env-vars RAILS_ENV=production,RAILS_LOG_TO_STDOUT=true,RAILS_SERVE_STATIC_FILES=true \
+          --set-secrets "DATABASE_URL=jira-task-database-url:latest,RAILS_MASTER_KEY=jira-task-rails-master-key:latest,SECRET_KEY_BASE=jira-task-secret-key-base:latest"

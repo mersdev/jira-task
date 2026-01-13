@@ -13,7 +13,6 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
-EXPOSE 80
-ENV PORT=80
+EXPOSE 8080
 
-CMD sh -c 'envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"'
+CMD sh -c ': "${PORT:=8080}"; : "${BACKEND_URL:=http://localhost:3000}"; envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"'
